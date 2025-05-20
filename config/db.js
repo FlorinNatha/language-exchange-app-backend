@@ -1,13 +1,15 @@
 const mongoose = require('mongoose');
 
-const connectDB = async () => {
+const ConnectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGO_URI);
+    await mongoose.connect('mongodb://127.0.0.1:27017/chatterly', {
+      useNewUrlParser: true,
+      userUnifiedTopology: true,
+    });
     console.log('MongoDB connected');
-  } catch (err) {
+  } catch(err) {
     console.error(err.message);
-    process.exit(1);
+    proq.exit(1);
   }
 };
-
-module.exports = connectDB;
+module.exports = ConnectDB;
