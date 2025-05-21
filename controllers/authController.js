@@ -9,7 +9,7 @@ exports.registerUser = async(req, res) => {
     if(userExists) return res.status(400).json({ msg: 'User already exists' });
 
     const salt = await bcrypt.genSalt(10);
-    const hashPassword = await bcrypt.hash(password, salt);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
     const newUser = new User({username, email, password: hashedPassword});
     await newUser.save();
@@ -17,7 +17,7 @@ exports.registerUser = async(req, res) => {
     const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET);
     res.json({token, user: {id: newUser._id, username, email }});
   } catch (err) {
-    res.status(500).json({mgs: err.message });
+    res.status(500).json({msg: err.message });
   }
 };
 
