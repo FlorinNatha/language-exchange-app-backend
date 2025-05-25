@@ -40,53 +40,52 @@ exports.loginUser = async (req, res) => {
 };
 
 exports.forgotPassword = async (req, res) => {
-  const {email} = req.body;
-  try{
-    const user = await User.findOne({email});
-    if(!user) return res.status(404).json({msg: 'No user with that email'});
+  const { email } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ msg: 'No user with that email' });
 
     const token = crypto.randomBytes(32).toString('hex');
-    const expires = Date.now() + 3600000 //1hour
+    const expires = Date.now() + 3600000; // 1 hour
 
-    user.resetPasswordToken= token;
-    user.resetPasswordExpires= expires;
+    user.resetPasswordToken = token;
+    user.resetPasswordExpires = expires;
     await user.save();
 
-    const resetLink = 'http://localhost:3000/reset-password/${token}';
+    const resetLink = `http://localhost:3000/reset-password/${token}`;
     await sendEmail(
       user.email,
       'Password Reset Request',
-      'Click the lonk to reset your password: ${resetLink}'
+      `Click the link to reset your password: ${resetLink}`
     );
 
-    res.json({msg: 'Reset link sent to email'});
-  }catch (err) {
-    res.json(500).json({msg: err.message});
+    res.json({ msg: 'Reset link sent to email' });
+  } catch (err) {
+    res.status(500).json({ msg: err.message });
   }
 };
 
 exports.resetPassword = async (req, res) => {
-  const {token} = req.params;
-  const {password} = req.body;
+  const { token } = req.params;
+  const { password } = req.body;
 
-  try{
+  try {
     const user = await User.findOne({
       resetPasswordToken: token,
-      resetPasswordExpires: { $gt: Date.now()}
+      resetPasswordExpires: { $gt: Date.now() }
     });
 
-    if(!user) return res.status(400).json({msg: 'Invalid or expired token'});
+    if (!user) return res.status(400).json({ msg: 'Invalid or expired token' });
 
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(password, salt);
-    user.resetPasswordExpires= undefined;
-    user.resetPasswordToken= undefined;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
 
     await user.save();
 
-    res.json({msg: 'Password reset successful'});
-  }catch(err){
-    res.status(500).json({msg: err.message});
+    res.json({ msg: 'Password reset successful' });
+  } catch (err) {
+    res.status(500).json({ msg: err.message });
   }
 };
-
