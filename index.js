@@ -4,13 +4,15 @@ const dotenv = require('dotenv');
 const socketio = require('socket.io');
 const http = require('http');
 const cors = require('cors');
+const { corsOption } = require('./middleware/corsMiddleware');
 
 
 dotenv.config();
 
 const app = express();
 app.use(express.json());
-app.use(cors());
+app.use(express.urlencoded({extended: true}));
+app.use(cors(corsOption));
 
 // Connect DB
 require('./config/db')();
