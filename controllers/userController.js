@@ -24,5 +24,22 @@ exports.getUserProfile = async (req, res) => {
 
 //3. Update User Profile
 exports.updateUserProfile = async (req, res) => {
-  
+  if(req.user._id.toString() !== req.params.id)
+    return res.status(403).json({msg: 'Not authorized to update this  profile'})
+
+  const { username, language, bio } = req.body;
+
+  try{
+    const user = await User.findById(req.params.id);
+    if(!user) return res.status(404).json({msg:'User not found'})
+
+    user.username = username || user.username;
+    user.language = language || user.language;
+    user.bio = bio || user.bio;
+
+    const updateUser = await user.save();
+    res.json({msg: 'Profile updated', user: updateUser});
+  } catch(err) {
+    res.status(500).json({msg: err.message});
+  }
 }
