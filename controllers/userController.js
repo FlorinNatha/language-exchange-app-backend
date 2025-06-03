@@ -43,3 +43,19 @@ exports.updateUserProfile = async (req, res) => {
     res.status(500).json({msg: err.message});
   }
 }
+
+//4. Get Online Users
+let onlineUsers = new Set();
+
+exports.getOnlineUsers = async (req, res) => {
+  try {
+    const users = await User.find({ _id: { $in: [...OnlineUsers]}}).select('-password');
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({msg: err.message});
+  }
+};
+
+//Helpers for Socket.IO
+exports.addOnlineUser = (userID) => onlineUsers.add(userID);
+exports.removeOnlineUser = (userId) => onlineUsers.delete(userId);
