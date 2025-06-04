@@ -49,7 +49,7 @@ let onlineUsers = new Set();
 
 exports.getOnlineUsers = async (req, res) => {
   try {
-    const users = await User.find({ _id: { $in: [...OnlineUsers]}}).select('-password');
+    const users = await User.find({ _id: { $in: [...onlineUsers]}}).select('-password');
     res.json(users);
   } catch (err) {
     res.status(500).json({msg: err.message});

@@ -4,6 +4,8 @@ const dotenv = require('dotenv');
 const socketio = require('socket.io');
 const http = require('http');
 const cors = require('cors');
+
+//import middleware and handers
 const { corsOption } = require('./middleware/corsMiddleware');
 
 
@@ -24,7 +26,7 @@ app.use('/api/users', require('./routes/userRoutes'));
 
 // Start server
 const server = http.createServer(app);
-const io = socketio(server, { cors: { origin: "*" } });
+const io = socketio(server, { cors: { origin: "*" } }); // allow frontend to connect
 require('./sockets/socketHandler')(io);
 
 const PORT = process.env.PORT || 5000;
