@@ -10,6 +10,7 @@ module.exports = (io) => {
       console.log(`User ${userId} connected`);
     }
 
+    //Join Room
     socket.on('join-room', async ({ roomId }) => {
       socket.join(roomId);
       try {
@@ -23,6 +24,7 @@ module.exports = (io) => {
       }
     });
 
+    //Leave Room
     socket.on('leave-room', async ({ roomId }) => {
       socket.leave(roomId);
       try {
@@ -34,6 +36,16 @@ module.exports = (io) => {
       } catch (err) {
         console.error('Error leaving room:', err.message);
       }
+    });
+
+    //WebRTC Signaling Events
+    socket.on('signal', ({to, from, data}) => {
+      io.to(to).emit('signal', {from, data});
+    });
+
+    //Mic Status
+    socket.on('mic-status', ({roomId, userId, isMicOn }) => {
+      socket.to(roomId).emit('mic-status-changed', {userId, isMicOn });
     });
 
     socket.on('disconnect', async () => {
