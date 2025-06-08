@@ -3,12 +3,16 @@ const Message = require("../models/Message");
 const Room = require('../models/Room');
 
 module.exports = (io) => {
+  const userSocketMap = new Map(); //track online users
+
   io.on('connection', (socket) => {
     const userId = socket.handshake.query.userId; // Pass userId from frontend
 
     if (userId) {
       addOnlineUser(userId);
+      userSocketMap.set(userId, socket.id);
       console.log(`User ${userId} connected`);
+      io.emit('user-online', userId); //notify all users
     }
 
     //Join Room
@@ -19,7 +23,7 @@ module.exports = (io) => {
           $addToSet: { users: userId },
           lastActive: Date.now(),
         });
-        socket.to(roomId).emit('user-joined', userId);
+        socket.to(roomId).emit('user-joined', userId); //notify room
       } catch (err) {
         console.error('Error joining room:', err.message);
       }
@@ -33,11 +37,16 @@ module.exports = (io) => {
           $pull: { users: userId },
           lastActive: Date.now(),
         });
-        socket.to(roomId).emit('user-left', userId);
+        socket.to(roomId).emit('user-left', userId); //notify room
       } catch (err) {
         console.error('Error leaving room:', err.message);
       }
     });
+
+    //Raise hand/ request to speak
+    socket.on('raise-hand', ({ roomId }) => {
+      socket.to(roomId).emit('hand-raised', {userId});
+    })
 
     //WebRTC Signaling Events
     socket.on('signal', ({to, from, data}) => {
@@ -54,14 +63,18 @@ module.exports = (io) => {
       const message = new Message({ sender: userId, receiver: to, content });
       await message.save();
 
-      const receiverSocket = [...io.sockets.sockets.values()].find(
-        s => s.handshake.query.userId === to
-      );
-      if (receiverSocket) {
-        receiverSocket.emit('private-message', {
+      const receiverSocketId = userSocketMap.get(to);
+      if (receiverSocketId) {
+        io.to(receiverSocketId).emit('private-message', {
           from: userId,
           content,
           timestamp: message.timestamp
+        });
+
+        //notification for new Direct message
+        io.to(receiverSocketId).emit('new-dm-notification', {
+          from: userId,
+          preview: content
         });
       }
     });
@@ -83,7 +96,9 @@ module.exports = (io) => {
     socket.on('disconnect', async () => {
       if (userId) {
         removeOnlineUser(userId);
+        userSocketMap.delete(userId);
         console.log(`User ${userId} disconnected`);
+        io.emit('user-offline', userId);
         
         // Optionally mark all rooms as inactive if user was last
         try {
