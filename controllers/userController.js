@@ -59,3 +59,48 @@ exports.getOnlineUsers = async (req, res) => {
 //Helpers for Socket.IO
 exports.addOnlineUser = (userID) => onlineUsers.add(userID);
 exports.removeOnlineUser = (userId) => onlineUsers.delete(userId);
+
+
+//follow another user
+exports.followUser = async (req, res) => {
+  try{
+    const currentUser = await User.findById(req.user.id);
+    const targetId = req.params.id;
+    if(!currentUser.following.includes(targetId)) {
+      currentUser.following.push(targetId);
+      await currentUser.save();
+    }
+    res.sendStatus(200);
+  } catch (err) {
+    res.status(500).json({message: err.message});
+  }
+};
+
+//unfollow a user
+exports.unfollowUser = async (req, res) => {
+  try{
+    const currentUser = await User.findById(req.user.id);
+    const targetId = req.params.id;
+
+    currentUser.following = currentUser.following.filter(
+      (followedId) => followedId.toString() !== targetId
+    );
+    
+    await currentUser.save();
+    res.sendStatus(200);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+//Get list of followed users
+exports.getFollowing = async (req, res) => {
+  try{
+    const user = await User.findById(req.user.id)
+      .populate('following', 'username email')
+      .select('following');
+    res.json(user.following);
+  }catch (err) {
+    res.status(500).json({ message: err.message});
+  }
+};
