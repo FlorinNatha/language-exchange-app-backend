@@ -1,4 +1,5 @@
 const { addOnlineUser, removeOnlineUser } = require("../controllers/userController");
+const Message = require("../models/Message");
 const Room = require('../models/Room');
 
 module.exports = (io) => {
@@ -48,6 +49,37 @@ module.exports = (io) => {
       socket.to(roomId).emit('mic-status-changed', {userId, isMicOn });
     });
 
+    //Private Message
+    socket.on('private-message', async ({ to, content }) => {
+      const message = new Message({ sender: userId, receiver: to, content });
+      await message.save();
+
+      const receiverSocket = [...io.sockets.sockets.values()].find(
+        s => s.handshake.query.userId === to
+      );
+      if (receiverSocket) {
+        receiverSocket.emit('private-message', {
+          from: userId,
+          content,
+          timestamp: message.timestamp
+        });
+      }
+    });
+
+    //Room message
+    socket.on('room-message', async ({ roomId, content }) => {
+      const message = new Message({ sender: userId, roomId, content });
+      await message.save();
+
+      io.to(roomId).emit('room-message', {
+        from: userId,
+        content,
+        roomId,
+        timestamp: message.timestamp
+      });
+    });
+
+    //disconnect
     socket.on('disconnect', async () => {
       if (userId) {
         removeOnlineUser(userId);

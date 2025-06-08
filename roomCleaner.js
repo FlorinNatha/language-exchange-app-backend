@@ -1,16 +1,26 @@
 const Room = require('./models/Room');
+const Message = require('./models/Message');
 
 const cleanEmptyRooms = async () => {
   const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
 
   try {
-    const deleted = await Room.deleteMany({
+    // Find all inactive, empty rooms
+    const roomsToDelete = await Room.find({
       users: { $size: 0 },
       lastActive: { $lt: fiveMinutesAgo },
     });
 
-    if (deleted.deletedCount > 0) {
-      console.log(`🧹 Deleted ${deleted.deletedCount} inactive rooms`);
+    const roomIds = roomsToDelete.map(room => room._id);
+
+    if (roomIds.length > 0) {
+      // Delete messages for those rooms
+      await Message.deleteMany({ roomId: { $in: roomIds } });
+
+      // Delete the rooms themselves
+      const deleted = await Room.deleteMany({ _id: { $in: roomIds } });
+
+      console.log(`🧹 Deleted ${deleted.deletedCount} inactive rooms and their messages`);
     }
 
   } catch (err) {
