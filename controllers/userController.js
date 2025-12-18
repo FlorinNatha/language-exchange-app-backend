@@ -70,6 +70,16 @@ exports.followUser = async (req, res) => {
       currentUser.following.push(targetId);
       await currentUser.save();
     }
+    // increment followersCount on target user
+    await User.findByIdAndUpdate(targetId, { $inc: { followersCount: 1 } });
+    // create persistent notification (lazy require to avoid cycles)
+    try {
+      const Notification = require('../models/Notification');
+      await Notification.create({ user: targetId, type: 'follow', data: { from: req.user.id } });
+    } catch (err) {
+      console.error('Error creating follow notification:', err.message);
+    }
+
     res.sendStatus(200);
   } catch (err) {
     res.status(500).json({message: err.message});
@@ -87,9 +97,30 @@ exports.unfollowUser = async (req, res) => {
     );
     
     await currentUser.save();
+    // decrement followersCount on target (ensure non-negative)
+    await User.findByIdAndUpdate(targetId, { $inc: { followersCount: -1 } });
     res.sendStatus(200);
   } catch (err) {
     res.status(500).json({ message: err.message });
+  }
+};
+
+// Upload avatar (expects multer middleware to set req.file)
+exports.uploadAvatar = async (req, res) => {
+  try {
+    if (req.user._id.toString() !== req.params.id) return res.status(403).json({ msg: 'Not authorized' });
+    if (!req.file) return res.status(400).json({ msg: 'No file uploaded' });
+
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ msg: 'User not found' });
+
+    // store relative path to file
+    user.avatarUrl = `/uploads/avatars/${req.file.filename}`;
+    await user.save();
+
+    res.json({ msg: 'Avatar uploaded', avatarUrl: user.avatarUrl });
+  } catch (err) {
+    res.status(500).json({ msg: err.message });
   }
 };
 
