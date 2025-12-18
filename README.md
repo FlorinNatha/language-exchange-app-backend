@@ -77,6 +77,16 @@ PORT=5000
 
 ## Tests
 - Test scaffolding is planned. To add tests, we recommend `jest`, `supertest`, and `mongodb-memory-server`.
+- Test scaffolding is included for a basic health-check. The project uses `jest` + `supertest` for tests.
+
+Running tests:
+
+```bash
+npm install
+npm test
+```
+
+Add more tests under the `tests/` folder. For DB-dependent tests, consider using `mongodb-memory-server`.
 
 ## Next steps / TODOs
 - Implement room-based call lifecycle and call records.

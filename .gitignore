@@ -2,8 +2,6 @@
 node_modules/
 
 # Environment variables
-.env
-.env.local
 
 # Logs
 npm-debug.log*
@@ -20,7 +18,6 @@ client/build/
 Thumbs.db
 
 # VS Code settings (optional)
-.vscode/
 
 # Electron output
 /dist/
@@ -31,3 +28,4 @@ Thumbs.db
 # Optional: package-lock/yarn.lock (if you don't want to track it)
 # package-lock.json
 # yarn.lock
+config.bat
