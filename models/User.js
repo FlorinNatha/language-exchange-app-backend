@@ -6,6 +6,8 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   language: { type: String, default: ''},
   bio: { type: String, default: ''},
+  avatarUrl: { type: String, default: '' },
+  followersCount: { type: Number, default: 0 },
   following:[{ type: mongoose.Schema.Types.ObjectId, ref: 'User'}],
   resetPasswordToken: String,
   resetPasswordExpires: Date

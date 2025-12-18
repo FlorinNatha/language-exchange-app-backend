@@ -24,12 +24,18 @@ app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/rooms', require('./routes/roomRoutes'));
 app.use('/api/messages', require('./routes/messageRoutes'));
+app.use('/api/notifications', require('./routes/notificationRoutes'));
+app.use('/api/calls', require('./routes/callRoutes'));
+app.use('/api/communities', require('./routes/communityRoutes'));
+app.use('/api/posts', require('./routes/postRoutes'));
 // ... other routes
 
 // Start server
 const server = http.createServer(app);
 const io = socketio(server, { cors: { origin: "*" } }); // allow frontend to connect
 require('./sockets/socketHandler')(io);
+// expose io to controllers
+require('./sockets/io').setIo(io);
 
 require('./roomCleaner')(); //start background cleaner
 
