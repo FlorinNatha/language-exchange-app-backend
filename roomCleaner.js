@@ -5,10 +5,12 @@ const cleanEmptyRooms = async () => {
   const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
 
   try {
-    // Find all inactive, empty rooms
+    // Find all inactive, empty rooms OR rooms scheduled for deletion
     const roomsToDelete = await Room.find({
-      users: { $size: 0 },
-      lastActive: { $lt: fiveMinutesAgo },
+      $or: [
+        { users: { $size: 0 }, lastActive: { $lt: fiveMinutesAgo } },
+        { scheduledDeletionAt: { $lt: new Date() } }
+      ]
     });
 
     const roomIds = roomsToDelete.map(room => room._id);
